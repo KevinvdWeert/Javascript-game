@@ -1,4 +1,3 @@
-# Javascript-game
 # 🎮 JavaScript Game Project
 
 Dit project is onderdeel van periode 1 en bestaat uit het ontwikkelen van een **JavaScript-game** met het framework **Phaser.io**, inclusief documentatie, een C#-applicatie voor datauitlezing en een presentatie van het eindresultaat.
