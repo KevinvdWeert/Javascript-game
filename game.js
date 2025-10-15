@@ -37,8 +37,11 @@ class AsteroidGame extends Phaser.Scene {
             this.createAsteroid();
         }
 
-        // Input setup
-        this.cursors = this.input.keyboard.createCursorKeys();
+        // Input setup - WASD controls
+        this.wKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+        this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        this.sKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+        this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         // UI
@@ -77,22 +80,22 @@ class AsteroidGame extends Phaser.Scene {
     }
 
     handleInput(delta) {
-        // Rotation
-        if (this.cursors.left.isDown) {
+        // Rotation - A and D keys
+        if (this.aKey.isDown) {
             this.player.angle -= 200 * (delta / 1000);
         }
-        if (this.cursors.right.isDown) {
+        if (this.dKey.isDown) {
             this.player.angle += 200 * (delta / 1000);
         }
 
-        // Thrust
-        if (this.cursors.up.isDown) {
+        // Thrust - W key
+        if (this.wKey.isDown) {
             const angleRad = Phaser.Math.DegToRad(this.player.angle);
             this.player.velocityX += Math.cos(angleRad) * 300 * (delta / 1000);
             this.player.velocityY += Math.sin(angleRad) * 300 * (delta / 1000);
         }
 
-        // Shoot
+        // Shoot - Space key
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
             this.shootBullet();
         }
