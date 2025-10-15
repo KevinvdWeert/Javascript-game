@@ -1,223 +1,6 @@
-class PlayerNameScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'PlayerNameScene' });
-    }
-
-    create() {
-        this.add.text(400, 200, 'ASTEROIDS GAME', {
-            fontSize: '48px',
-            fill: '#fff',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 280, 'Enter Your Name:', {
-            fontSize: '32px',
-            fill: '#fff',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        // Create input field
-        this.playerName = '';
-        this.nameText = this.add.text(400, 340, '|', {
-            fontSize: '32px',
-            fill: '#ffff00',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 420, 'Press ENTER to start', {
-            fontSize: '24px',
-            fill: '#aaa',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 460, 'Press H for High Scores', {
-            fontSize: '18px',
-            fill: '#aaa',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        // Handle keyboard input
-        this.input.keyboard.on('keydown', this.handleKeyInput, this);
-    }
-
-    handleKeyInput(event) {
-        if (event.keyCode === 8) { // Backspace
-            this.playerName = this.playerName.slice(0, -1);
-            this.nameText.setText(this.playerName + '|');
-        } else if (event.keyCode === 13) { // Enter
-            if (this.playerName.length > 0) {
-                this.scene.start('AsteroidGame', { playerName: this.playerName });
-            }
-        } else if (event.key.toLowerCase() === 'h') { // High scores
-            this.scene.start('HighScoresScene');
-        } else if (event.key.length === 1 && this.playerName.length < 15) {
-            this.playerName += event.key.toUpperCase();
-            this.nameText.setText(this.playerName + '|');
-        }
-    }
-}
-
-class HighScoresScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'HighScoresScene' });
-    }
-
-    init(data) {
-        this.returnScene = data.returnScene || 'PlayerNameScene';
-    }
-
-    async create() {
-        this.add.text(400, 50, 'HIGH SCORES', {
-            fontSize: '48px',
-            fill: '#fff',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        // Load and display scores
-        const scores = await this.loadScores();
-        
-        if (scores.length === 0) {
-            this.add.text(400, 200, 'No scores yet!', {
-                fontSize: '32px',
-                fill: '#aaa',
-                align: 'center'
-            }).setOrigin(0.5);
-        } else {
-            scores.forEach((score, index) => {
-                const y = 120 + (index * 40);
-                this.add.text(400, y, `${index + 1}. ${score.name} - ${score.score} pts (${score.time}s)`, {
-                    fontSize: '24px',
-                    fill: index < 3 ? '#ffff00' : '#fff',
-                    align: 'center'
-                }).setOrigin(0.5);
-            });
-        }
-
-        this.add.text(400, 550, 'Press SPACE to return', {
-            fontSize: '24px',
-            fill: '#aaa',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.input.keyboard.once('keydown-SPACE', () => {
-            if (this.returnScene === 'AsteroidGame') {
-                this.scene.start('PauseScene');
-            } else {
-                this.scene.start(this.returnScene);
-            }
-        });
-    }
-
-    async loadScores() {
-        try {
-            // Try to load from server first
-            const response = await fetch('/api/scores');
-            if (response.ok) {
-                return await response.json();
-            }
-        } catch (error) {
-            console.log('Server not available, using localStorage');
-        }
-
-        // Fallback to localStorage
-        try {
-            return JSON.parse(localStorage.getItem('asteroidScores') || '[]');
-        } catch (error) {
-            console.log('Could not load scores:', error);
-            return [];
-        }
-    }
-}
-
-class PauseScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'PauseScene' });
-    }
-
-    init(data) {
-        this.currentScore = data.score || 0;
-        this.playerName = data.playerName || 'PLAYER';
-        this.gameTime = data.gameTime || 0;
-    }
-
-    create() {
-        // Semi-transparent overlay
-        this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
-
-        this.add.text(400, 150, 'GAME PAUSED', {
-            fontSize: '48px',
-            fill: '#fff',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        // Show current game stats
-        this.add.text(400, 220, `Player: ${this.playerName}`, {
-            fontSize: '24px',
-            fill: '#ffff00',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 250, `Current Score: ${this.currentScore}`, {
-            fontSize: '24px',
-            fill: '#ffff00',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 280, `Time: ${this.gameTime}s`, {
-            fontSize: '24px',
-            fill: '#ffff00',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        // Control instructions
-        this.add.text(400, 340, 'Press ESC to resume', {
-            fontSize: '24px',
-            fill: '#fff',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 380, 'Press H for High Scores', {
-            fontSize: '24px',
-            fill: '#aaa',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 420, 'Press Q to quit to main menu', {
-            fontSize: '24px',
-            fill: '#aaa',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        // Handle input
-        this.escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-        this.hKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H);
-        this.qKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
-
-        this.input.keyboard.on('keydown', this.handleKeyInput, this);
-    }
-
-    handleKeyInput(event) {
-        if (event.keyCode === 27) { // ESC
-            this.scene.stop();
-            this.scene.resume('AsteroidGame');
-        } else if (event.key.toLowerCase() === 'h') { // High scores
-            this.scene.start('HighScoresScene', { returnScene: 'AsteroidGame' });
-        } else if (event.key.toLowerCase() === 'q') { // Quit to menu
-            this.scene.stop();
-            this.scene.stop('AsteroidGame');
-            this.scene.start('PlayerNameScene');
-        }
-    }
-}
-
 class AsteroidGame extends Phaser.Scene {
     constructor() {
         super({ key: 'AsteroidGame' });
-    }
-
-    init(data) {
-        this.playerName = data.playerName || 'PLAYER';
-        this.gameStartTime = new Date();
     }
 
     preload() {
@@ -242,7 +25,7 @@ class AsteroidGame extends Phaser.Scene {
         this.player.angle = 0;
         this.player.velocityX = 0;
         this.player.velocityY = 0;
-        this.player.lives = 1;
+        this.player.lives = 3;
         this.drawPlayer();
 
         // Create groups
@@ -257,20 +40,15 @@ class AsteroidGame extends Phaser.Scene {
         // Input setup
         this.cursors = this.input.keyboard.createCursorKeys();
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
         // UI
         this.score = 0;
-        this.add.text(16, 16, 'Player: ' + this.playerName, {
-            fontSize: '24px',
+        this.scoreText = this.add.text(16, 16, 'Score: 0', {
+            fontSize: '32px',
             fill: '#fff'
         });
-        this.scoreText = this.add.text(16, 46, 'Score: 0', {
-            fontSize: '24px',
-            fill: '#fff'
-        });
-        this.livesText = this.add.text(16, 76, 'Lives: 1', {
-            fontSize: '24px',
+        this.livesText = this.add.text(16, 56, 'Lives: 3', {
+            fontSize: '32px',
             fill: '#fff'
         });
 
@@ -299,12 +77,6 @@ class AsteroidGame extends Phaser.Scene {
     }
 
     handleInput(delta) {
-        // Pause game
-        if (Phaser.Input.Keyboard.JustDown(this.escKey)) {
-            this.pauseGame();
-            return;
-        }
-
         // Rotation
         if (this.cursors.left.isDown) {
             this.player.angle -= 200 * (delta / 1000);
@@ -324,19 +96,6 @@ class AsteroidGame extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
             this.shootBullet();
         }
-    }
-
-    pauseGame() {
-        // Calculate current game time
-        const currentTime = new Date();
-        const gameTime = Math.floor((currentTime - this.gameStartTime) / 1000);
-        
-        this.scene.pause();
-        this.scene.launch('PauseScene', { 
-            score: this.score,
-            playerName: this.playerName,
-            gameTime: gameTime
-        });
     }
 
     updatePlayer(delta) {
@@ -511,84 +270,15 @@ class AsteroidGame extends Phaser.Scene {
     }
 
     gameOver() {
-        // Calculate game duration
-        const gameEndTime = new Date();
-        const gameDuration = Math.floor((gameEndTime - this.gameStartTime) / 1000); // in seconds
-        
-        // Save score
-        this.saveScore(this.playerName, this.score, gameDuration);
-        
-        this.add.text(400, 250, 'GAME OVER', {
+        this.add.text(400, 300, 'GAME OVER\n\nPress SPACE to restart', {
             fontSize: '48px',
             fill: '#ff0000',
             align: 'center'
         }).setOrigin(0.5);
 
-        this.add.text(400, 320, `Final Score: ${this.score}`, {
-            fontSize: '32px',
-            fill: '#fff',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 360, `Time: ${gameDuration}s`, {
-            fontSize: '24px',
-            fill: '#fff',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 420, 'Press SPACE to play again', {
-            fontSize: '24px',
-            fill: '#aaa',
-            align: 'center'
-        }).setOrigin(0.5);
-
         this.input.keyboard.once('keydown-SPACE', () => {
-            this.scene.start('PlayerNameScene');
+            this.scene.restart();
         });
-    }
-
-    async saveScore(playerName, score, duration) {
-        const scoreData = {
-            name: playerName,
-            score: score,
-            time: duration
-        };
-
-        try {
-            // Try to save to server first
-            const response = await fetch('/api/scores', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(scoreData)
-            });
-
-            if (response.ok) {
-                console.log('Score saved to server:', scoreData);
-                return;
-            }
-        } catch (error) {
-            console.log('Server not available, using localStorage:', error);
-        }
-
-        // Fallback to localStorage
-        try {
-            let scores = JSON.parse(localStorage.getItem('asteroidScores') || '[]');
-            scores.push({
-                ...scoreData,
-                date: new Date().toISOString()
-            });
-            
-            // Keep only top 10 scores
-            scores.sort((a, b) => b.score - a.score);
-            scores = scores.slice(0, 10);
-            
-            localStorage.setItem('asteroidScores', JSON.stringify(scores));
-            console.log('Score saved to localStorage:', scoreData);
-        } catch (error) {
-            console.log('Could not save score:', error);
-        }
     }
 
     wrapObjects() {
@@ -622,7 +312,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: '#000022',
-    scene: [PlayerNameScene, HighScoresScene, PauseScene, AsteroidGame]
+    scene: AsteroidGame
 };
 
 // Initialize the game
