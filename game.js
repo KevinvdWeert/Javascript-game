@@ -1,6 +1,80 @@
+class NameInputScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'NameInputScene' });
+    }
+
+    create() {
+        // Background
+        this.add.rectangle(400, 300, 800, 600, 0x000022);
+        
+        // Title
+        this.add.text(400, 150, 'ASTEROIDS', {
+            fontSize: '64px',
+            fill: '#fff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        // Instruction
+        this.add.text(400, 250, 'Enter Your Name:', {
+            fontSize: '32px',
+            fill: '#fff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        // Name input
+        this.playerName = '';
+        this.nameDisplay = this.add.text(400, 320, '|', {
+            fontSize: '32px',
+            fill: '#ffff00',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        // Instructions
+        this.add.text(400, 420, 'Press ENTER to start game', {
+            fontSize: '24px',
+            fill: '#aaa',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        this.add.text(400, 460, 'Press BACKSPACE to delete', {
+            fontSize: '18px',
+            fill: '#666',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        // Handle keyboard input
+        this.input.keyboard.on('keydown', this.handleKeyInput, this);
+    }
+
+    handleKeyInput(event) {
+        if (event.keyCode === 8) { // Backspace
+            this.playerName = this.playerName.slice(0, -1);
+            this.updateDisplay();
+        } else if (event.keyCode === 13) { // Enter
+            if (this.playerName.length > 0) {
+                this.scene.start('AsteroidGame', { playerName: this.playerName });
+            }
+        } else if (event.key.length === 1 && this.playerName.length < 15) {
+            // Only allow letters, numbers and some symbols
+            if (/^[a-zA-Z0-9\s\-_]$/.test(event.key)) {
+                this.playerName += event.key.toUpperCase();
+                this.updateDisplay();
+            }
+        }
+    }
+
+    updateDisplay() {
+        this.nameDisplay.setText(this.playerName + '|');
+    }
+}
+
 class AsteroidGame extends Phaser.Scene {
     constructor() {
         super({ key: 'AsteroidGame' });
+    }
+
+    init(data) {
+        this.playerName = data.playerName || 'ANONYMOUS';
     }
 
     preload() {
@@ -10,6 +84,9 @@ class AsteroidGame extends Phaser.Scene {
 
     create() {
         console.log('Create phase started');
+        
+        // Game start time for duration tracking
+        this.gameStartTime = Date.now();
         
         // Create starfield background
         for (let i = 0; i < 100; i++) {
@@ -46,11 +123,15 @@ class AsteroidGame extends Phaser.Scene {
 
         // UI
         this.score = 0;
-        this.scoreText = this.add.text(16, 16, 'Score: 0', {
+        this.add.text(16, 16, 'Player: ' + this.playerName, {
+            fontSize: '24px',
+            fill: '#fff'
+        });
+        this.scoreText = this.add.text(16, 46, 'Score: 0', {
             fontSize: '32px',
             fill: '#fff'
         });
-        this.livesText = this.add.text(16, 56, 'Lives: 3', {
+        this.livesText = this.add.text(16, 86, 'Lives: 3', {
             fontSize: '32px',
             fill: '#fff'
         });
@@ -273,15 +354,83 @@ class AsteroidGame extends Phaser.Scene {
     }
 
     gameOver() {
-        this.add.text(400, 300, 'GAME OVER\n\nPress SPACE to restart', {
+        // Calculate game duration in seconds
+        const gameEndTime = Date.now();
+        const gameDuration = Math.floor((gameEndTime - this.gameStartTime) / 1000);
+        
+        // Save score to localStorage/JSON
+        this.saveScore(this.playerName, this.score, gameDuration);
+        
+        this.add.text(400, 250, 'GAME OVER', {
             fontSize: '48px',
             fill: '#ff0000',
             align: 'center'
         }).setOrigin(0.5);
 
+        this.add.text(400, 320, `Final Score: ${this.score}`, {
+            fontSize: '32px',
+            fill: '#fff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        this.add.text(400, 360, `Time: ${gameDuration}s`, {
+            fontSize: '24px',
+            fill: '#fff',
+            align: 'center'
+        }).setOrigin(0.5);
+
+        this.add.text(400, 420, 'Press SPACE to restart', {
+            fontSize: '24px',
+            fill: '#aaa',
+            align: 'center'
+        }).setOrigin(0.5);
+
         this.input.keyboard.once('keydown-SPACE', () => {
-            this.scene.restart();
+            this.scene.start('NameInputScene');
         });
+    }
+
+    saveScore(playerName, score, duration) {
+        try {
+            // Get existing scores from localStorage
+            let scores = JSON.parse(localStorage.getItem('asteroidScores') || '[]');
+            
+            // Add new score
+            const newScore = {
+                name: playerName,
+                score: score,
+                time: duration,
+                date: new Date().toISOString()
+            };
+            
+            scores.push(newScore);
+            
+            // Sort by score (highest first) and keep top 10
+            scores.sort((a, b) => b.score - a.score);
+            scores = scores.slice(0, 10);
+            
+            // Save back to localStorage
+            localStorage.setItem('asteroidScores', JSON.stringify(scores));
+            
+            // Also update the scores.json structure for compatibility
+            const gameData = {
+                name: "asteroid-game",
+                version: "1.0.0",
+                description: "Asteroid game with score tracking",
+                lastScore: score,
+                lastPlayer: playerName,
+                lastTime: duration,
+                highScores: scores
+            };
+            
+            localStorage.setItem('gameData', JSON.stringify(gameData));
+            
+            console.log('Score saved:', newScore);
+            console.log('All scores:', scores);
+            
+        } catch (error) {
+            console.error('Could not save score:', error);
+        }
     }
 
     wrapObjects() {
@@ -315,7 +464,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: '#000022',
-    scene: AsteroidGame
+    scene: [NameInputScene, AsteroidGame]
 };
 
 // Initialize the game

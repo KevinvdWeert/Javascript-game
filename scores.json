@@ -2,5 +2,8 @@
   "name": "asteroid-game",
   "version": "1.0.0",
   "description": "Asteroid game with score tracking",
-  "score": 100
+  "lastScore": 0,
+  "lastPlayer": "",
+  "lastTime": 0,
+  "highScores": []
 }
