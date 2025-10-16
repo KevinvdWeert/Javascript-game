@@ -415,8 +415,6 @@ class AsteroidGame extends Phaser.Scene {
             // Also update the scores.json structure for compatibility
             const gameData = {
                 name: "asteroid-game",
-                version: "1.0.0",
-                description: "Asteroid game with score tracking",
                 lastScore: score,
                 lastPlayer: playerName,
                 lastTime: duration,
