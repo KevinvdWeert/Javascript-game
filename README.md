@@ -17,6 +17,8 @@ Dit project is onderdeel van periode 1 en bestaat uit het ontwikkelen van een **
 
 ---
 
+phaser documentatie: https://docs.phaser.io/phaser/getting-started/what-is-phaser
+
 ## 🧩 Overzicht
 
 Je ontwikkelt in een team een complete game met bijbehorende applicatie.  
