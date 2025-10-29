@@ -1,0 +1,14 @@
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\obj\Debug\Spazer_JSon.csproj.AssemblyReference.cache
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\obj\Debug\Spazer_JSon.Properties.Resources.resources
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\obj\Debug\Spazer_JSon.csproj.GenerateResource.cache
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\obj\Debug\Spazer_JSon.csproj.CoreCompileInputs.cache
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\bin\Debug\Spazer_JSon.exe.config
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\bin\Debug\Spazer_JSon.exe
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\bin\Debug\Spazer_JSon.pdb
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\bin\Debug\Newtonsoft.Json.xml
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\obj\Debug\Spazer_JSon.Form1.resources
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\obj\Debug\Spazer_J.6481F976.Up2Date
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\obj\Debug\Spazer_JSon.exe
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\obj\Debug\Spazer_JSon.pdb
+C:\Users\Jörn\OneDrive\C#\Blackfridey\Spazer_JSon\Spazer_JSon\obj\Debug\Spazer_JSon.exe.config
