@@ -412,16 +412,22 @@ class AsteroidGame extends Phaser.Scene {
             // Save back to localStorage
             localStorage.setItem('asteroidScores', JSON.stringify(scores));
             
-            // Also update the scores.json structure for compatibility
+            // Create the JSON data structure
             const gameData = {
                 name: "asteroid-game",
+                version: "1.0.0",
+                description: "Asteroid game with score tracking",
                 lastScore: score,
                 lastPlayer: playerName,
                 lastTime: duration,
                 highScores: scores
             };
             
-            localStorage.setItem('gameData', JSON.stringify(gameData));
+            // Save to localStorage for C# app to read
+            localStorage.setItem('gameData', JSON.stringify(gameData, null, 2));
+            
+            // Write to scores.json file
+            this.writeToJsonFile(gameData);
             
             console.log('Score saved:', newScore);
             console.log('All scores:', scores);
@@ -429,6 +435,47 @@ class AsteroidGame extends Phaser.Scene {
         } catch (error) {
             console.error('Could not save score:', error);
         }
+    }
+
+    async writeToJsonFile(gameData) {
+        try {
+            // Try to write to the actual scores.json file
+            const jsonString = JSON.stringify(gameData, null, 2);
+            
+            // Use fetch to write to the file (requires a simple server endpoint)
+            const response = await fetch('save-scores.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: jsonString
+            });
+
+            if (response.ok) {
+                console.log('Scores successfully saved to scores.json');
+            } else {
+                console.log('Server not available, using localStorage only');
+                // Fallback: update the existing scores.json structure in localStorage
+                this.updateLocalJsonFile(gameData);
+            }
+            
+        } catch (error) {
+            console.log('Could not write to server, using localStorage:', error);
+            this.updateLocalJsonFile(gameData);
+        }
+    }
+
+    updateLocalJsonFile(gameData) {
+        // Store the JSON structure that matches scores.json format
+        const jsonContent = JSON.stringify(gameData, null, 2);
+        localStorage.setItem('scoresJsonContent', jsonContent);
+        
+        // Also create a file URL that can be accessed
+        const blob = new Blob([jsonContent], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        localStorage.setItem('scoresJsonUrl', url);
+        
+        console.log('JSON data stored locally for C# access');
     }
 
     wrapObjects() {
