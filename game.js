@@ -398,7 +398,7 @@ gameOver() {
     this.scene.start('GameOverScene', {
         score: this.score,
         time: gameDuration,
-        playerName: this.playerName // <-- add this
+        playerName: this.playerName
     });
 }
 
