@@ -74,7 +74,12 @@ class AsteroidGame extends Phaser.Scene {
     }
 
     init(data) {
-        this.playerName = data.playerName || 'ANONYMOUS';
+        // Reset all gameplay variables on scene start
+        this.lives = 3;
+        this.score = 0;
+        this.isGameOver = false;
+        this.playerName = data.playerName;
+        this.gameStartTime = Date.now();
     }
 
     preload() {
@@ -104,7 +109,7 @@ class AsteroidGame extends Phaser.Scene {
         this.player.velocityY = 0;
         this.player.lives = 3;
         this.drawPlayer();
-
+        this.player.isInvincible = false;
         // Create groups
         this.asteroids = this.add.group();
         this.bullets = this.add.group();
@@ -292,7 +297,9 @@ class AsteroidGame extends Phaser.Scene {
         this.asteroids.children.entries.forEach(asteroid => {
             const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, asteroid.x, asteroid.y);
             if (distance < asteroid.size * 10 + 10) {
-                this.playerHit();
+                if (!this.player.isInvincible) {
+                    this.playerHit();
+                }
             }
         });
     }
@@ -327,21 +334,46 @@ class AsteroidGame extends Phaser.Scene {
         }
     }
 
-    playerHit() {
-        this.player.lives--;
-        this.livesText.setText('Lives: ' + this.player.lives);
-        
-        if (this.player.lives <= 0) {
-            this.gameOver();
-        } else {
-            // Reset player
-            this.player.x = 400;
-            this.player.y = 300;
-            this.player.velocityX = 0;
-            this.player.velocityY = 0;
-            this.player.angle = 0;
-        }
+playerHit() {
+    // Check if player is currently invincible
+    if (this.player.isInvincible) return;
+
+    // Reduce lives
+    this.player.lives--;
+    this.livesText.setText('Lives: ' + this.player.lives);
+
+    // Make player temporarily invincible
+    this.player.isInvincible = true;
+
+    // Optional: blink effect for visual feedback
+    this.tweens.add({
+        targets: this.player,
+        alpha: 0.3,
+        yoyo: true,
+        repeat: 5,        // total of 6 flashes
+        duration: 100     // 100ms per flash
+    });
+
+    // Reset player position if still alive
+    if (this.player.lives > 0) {
+        this.player.x = 400;
+        this.player.y = 300;
+        this.player.velocityX = 0;
+        this.player.velocityY = 0;
+        this.player.angle = 0;
     }
+
+    // Remove invincibility after 1 second
+    this.time.delayedCall(1000, () => {
+        this.player.isInvincible = false;
+        this.player.setAlpha(1); // ensure fully visible
+    });
+
+    // Check for game over
+    if (this.player.lives <= 0) {
+        this.gameOver();
+    }
+}
 
     nextWave() {
         // Create more asteroids
@@ -353,42 +385,21 @@ class AsteroidGame extends Phaser.Scene {
         this.scoreText.setText('Score: ' + this.score);
     }
 
-    gameOver() {
-        // Calculate game duration in seconds
-        const gameEndTime = Date.now();
-        const gameDuration = Math.floor((gameEndTime - this.gameStartTime) / 1000);
-        
-        // Save score to localStorage/JSON
-        this.saveScore(this.playerName, this.score, gameDuration);
-        
-        this.add.text(400, 250, 'GAME OVER', {
-            fontSize: '48px',
-            fill: '#ff0000',
-            align: 'center'
-        }).setOrigin(0.5);
+gameOver() {
+    if (this.isGameOver) return;
+    this.isGameOver = true;
 
-        this.add.text(400, 320, `Final Score: ${this.score}`, {
-            fontSize: '32px',
-            fill: '#fff',
-            align: 'center'
-        }).setOrigin(0.5);
+    // Save score
+    const gameEndTime = Date.now();
+    const gameDuration = Math.floor((gameEndTime - this.gameStartTime) / 1000);
+    this.saveScore(this.playerName, this.score, gameDuration);
 
-        this.add.text(400, 360, `Time: ${gameDuration}s`, {
-            fontSize: '24px',
-            fill: '#fff',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.add.text(400, 420, 'Press SPACE to restart', {
-            fontSize: '24px',
-            fill: '#aaa',
-            align: 'center'
-        }).setOrigin(0.5);
-
-        this.input.keyboard.once('keydown-SPACE', () => {
-            this.scene.start('NameInputScene');
-        });
-    }
+    // Switch directly to GameOverScene (do NOT pause or freeze)
+    this.scene.start('GameOverScene', {
+        score: this.score,
+        time: gameDuration
+    });
+}
 
     saveScore(playerName, score, duration) {
         try {
@@ -455,6 +466,30 @@ class AsteroidGame extends Phaser.Scene {
     }
 }
 
+class GameOverScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameOverScene' });
+    }
+
+    create(data) {
+        // Background can just be black if you want frozen look
+        this.add.rectangle(400, 300, 800, 600, 0x000000, 0.6);
+
+        // Game Over UI
+        this.add.text(400, 250, 'GAME OVER', { fontSize: '64px', fill: '#ff0000' }).setOrigin(0.5);
+        this.add.text(400, 320, `Final Score: ${data.score}`, { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
+        this.add.text(400, 360, `Time: ${data.time}s`, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+        this.add.text(400, 420, 'Press SPACE to restart', { fontSize: '24px', fill: '#aaa' }).setOrigin(0.5);
+
+        // Restart input
+        this.input.keyboard.once('keydown-SPACE', () => {
+            this.scene.start('NameInputScene'); // fully restart
+        });
+    }
+}
+
+
+
 // Game configuration
 const config = {
     type: Phaser.AUTO,
@@ -462,7 +497,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: '#000022',
-    scene: [NameInputScene, AsteroidGame]
+    scene: [NameInputScene, AsteroidGame, GameOverScene]
 };
 
 // Initialize the game
