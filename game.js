@@ -397,7 +397,8 @@ gameOver() {
     // Switch directly to GameOverScene (do NOT pause or freeze)
     this.scene.start('GameOverScene', {
         score: this.score,
-        time: gameDuration
+        time: gameDuration,
+        playerName: this.playerName // <-- add this
     });
 }
 
@@ -524,9 +525,11 @@ class GameOverScene extends Phaser.Scene {
 
         // Game Over UI
         this.add.text(400, 250, 'GAME OVER', { fontSize: '64px', fill: '#ff0000' }).setOrigin(0.5);
-        this.add.text(400, 320, `Final Score: ${data.score}`, { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
-        this.add.text(400, 360, `Time: ${data.time}s`, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
-        this.add.text(400, 420, 'Press SPACE to restart', { fontSize: '24px', fill: '#aaa' }).setOrigin(0.5);
+        this.add.text(400, 300, `Player Name: ${data.playerName}`, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+        this.add.text(400, 340, `Final Score: ${data.score}`, { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
+        this.add.text(400, 380, `Time: ${data.time}s`, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+        this.add.text(400, 440, 'Press SPACE to restart', { fontSize: '24px', fill: '#aaa' }).setOrigin(0.5);
+
 
         // Restart input
         this.input.keyboard.once('keydown-SPACE', () => {
